@@ -1,0 +1,47 @@
+pipeline{
+agent any
+parameters {
+  string(name: 'name',defaultValue: '', description: 'Please select the name')
+  string(name: 'state',defaultValue: '', description: 'Please select the state')
+  string(name: 'service', defaultValue: '', description: 'Please select the service')
+} 
+stages{
+stage("Verification"){
+steps{
+script{
+ echo "${name}"
+ echo "${state}"
+ echo "${service}"
+      } 
+     }
+    }
+stage("Deployement"){
+steps{
+script{
+echo "Deployement started"
+sh "ssh root@34.211.243.93 /opt/tomcat/bin/shutdown.sh"
+sh "scp -o StrictHostKeyChecking=no /var/lib/jenkins/workspace/continous-integration/target/psdapp.war root@34.211.243.93:/opt/tomcat/webapps"
+sh "ssh root@34.211.243.93 /opt/tomcat/bin/startup.sh"
+echo "Deployement completed"
+
+    }
+   }
+  post {
+ success{
+    mail to: 'naveentanish20@gmail.com',
+    subject: "Job '${JOB_NAME}' (${BUILD_NUMBER}) is completed",
+    body: "Success Please go to ${BUILD_URL} and verify the build"
+        }
+  failure{
+    mail to: 'naveentanish20@gmail.com',
+    subject: "Job '${JOB_NAME}' (${BUILD_NUMBER}) is failure",
+    body: "Failure Please go to ${BUILD_URL} and verify the build"
+         }
+   always{
+    echo "this is always"
+         }
+}    
+  }
+    } 
+	
+	}
