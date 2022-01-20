@@ -1,0 +1,65 @@
+pipeline{
+agent any
+parameters {
+  string name: 'name',defaultValue: 'master', description: 'Please select the name', trim: true
+  choice name: 'state',choices: ['Choices', 'master', 'Dev', 'Prod'], description: 'Please select the state'
+  booleanParam name: 'service', defaultValue: true, description: 'Please select the service'
+} 
+stages{
+stage("SCM"){
+steps{
+script{
+echo "SCM or cloning is started"
+git branch: '${name}', credentialsId: 'Github_cred', url: 'https://github.com/naveen5758/sampletest.git'
+echo "SCM or cloning is completed"
+   }
+  }
+ }
+ 
+stage("Build"){
+steps{
+script{
+echo "Build started"
+sh 'mvn clean package'
+echo "Build completed"
+
+    }
+   }
+   post {     
+	  success {junit allowEmptyResults: true, skipPublishingChecks: true, testResults: 'target/surefire-reports/*.xml'
+	         }
+         }  
+  }
+  
+stage("Sonar-Qubes"){
+steps{
+script{
+echo "Sonar-Qubes started"
+
+echo "Sonar-Qubes completed"
+    }
+  }
+ }
+
+stage("Nexus"){
+steps{
+script{
+echo "Nexus started"
+
+echo "Nexus completed"
+    }
+   }
+  }
+stage("Calling_Job"){
+steps{
+script{
+echo "Calling_Job started"
+build job: 'continous-deployement', parameters: [string(name: 'name', value:"${params.name}"),
+string(name: 'state', value:"${params.state}"),
+string(name: 'service', value:"${service}")]
+echo "Calling completed"
+    }
+   }
+  }
+ }
+}
